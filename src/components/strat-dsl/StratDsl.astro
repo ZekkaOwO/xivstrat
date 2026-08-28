@@ -1,0 +1,90 @@
+---
+import type { StratDslDocument } from '@/lib/strat-dsl'
+
+import AttackSection from '@/components/section/AttackSection.astro'
+import CastSection from '@/components/section/CastSection.astro'
+import EventSection from '@/components/section/EventSection.astro'
+import MechanicSection from '@/components/section/MechanicSection.astro'
+import NoteSection from '@/components/section/NoteSection.astro'
+import SeparatorSection from '@/components/section/SeparatorSection.astro'
+import SolutionSection from '@/components/section/SolutionSection.astro'
+import P from '@/components/typography/P.astro'
+import T from '@/components/typography/T.astro'
+import Badge from '@/components/Badge.astro'
+import Quote from '@/components/typography/Quote.astro'
+import DraftWarning from '@/components/draft-warning/DraftWarning.astro'
+import StratDslMedia from '@/components/strat-dsl/StratDslMedia.astro'
+import Separator from '@/components/Separator.astro'
+import StratDslMultiSolution from '@/components/strat-dsl/StratDslMultiSolution.astro'
+import CollapseSection from '@/components/section/CollapseSection.astro'
+import StratDslAnimation from '@/components/strat-dsl/StratDslAnimation.astro'
+import StratDslInline from '@/components/strat-dsl/StratDslInline.astro'
+import StratDslImage from '@/components/strat-dsl/StratDslImage.astro'
+import StratDslPreset from '@/components/strat-dsl/StratDslPreset.astro'
+
+interface Props { document: StratDslDocument }
+const { document } = Astro.props
+---
+
+{
+  document.nodes.map((node) => {
+    if (node.type === 'separator') return <SeparatorSection id={node.id} title={node.title} />
+    if (node.type === 'warning') return (
+      <DraftWarning showDialog={false}>
+        <div class="my-4 flex flex-col gap-4 text-3xl text-cyan-600 [text-shadow:_0_0_1px_var(--color-cyan-600)] dark:text-cyan-400">
+          {node.paragraphs.map((paragraph) => <P class="justify-center"><StratDslInline tokens={paragraph} /></P>)}
+        </div>
+      </DraftWarning>
+    )
+    if (node.type === 'multi-solution') return <StratDslMultiSolution node={node} />
+    if (node.type === 'collapse') return (
+      <CollapseSection>
+        <Fragment slot="summary"><StratDslInline tokens={node.summary} /></Fragment>
+        <Fragment slot="details">
+          {node.events.map((event) => <EventSection time={event.time}><StratDslInline tokens={event.content} /></EventSection>)}
+        </Fragment>
+      </CollapseSection>
+    )
+    if (node.type === 'animation') return <StratDslAnimation node={node} />
+    if (node.type === 'event') return <EventSection time={node.time}><StratDslInline tokens={node.content} /></EventSection>
+    if (node.type === 'cast') {
+      return <CastSection start={node.start} duration={node.duration} ability={node.ability} target={node.targetContent ? true : node.target} targetTag={node.targetTag} damage={node.damage} damageType={node.damageType}>
+        {node.targetContent && <Fragment slot="target"><StratDslInline tokens={node.targetContent} /></Fragment>}
+        {node.extra && <StratDslInline tokens={node.extra} />}
+        {node.badge && <Badge variant={node.badgeVariant ?? 'yellow'}>{node.badge}</Badge>}
+        {node.badges?.map((badge) => <Badge variant={badge.variant}>{badge.text}</Badge>)}
+      </CastSection>
+    }
+    if (node.type === 'attack') {
+      return <AttackSection time={node.time} name={node.name} damage={node.damage} damageType={node.damageType} />
+    }
+    if (node.type === 'image') return <StratDslImage {...node} />
+    if (node.type === 'preset') return <StratDslPreset {...node} />
+    const Section = node.type === 'note' ? NoteSection : node.type === 'solution' ? SolutionSection : MechanicSection
+    return (
+      <Section title={node.title}>
+        <div class="flex flex-col gap-4">
+          {node.items.map((item) => item.type === 'image'
+            ? <StratDslImage {...item} embedded />
+            : item.type === 'image-group'
+              ? <StratDslImage images={item.images} width={item.width} line={item.line} embedded />
+            : item.type === 'heading'
+              ? <T><StratDslInline tokens={item.content} /></T>
+            : item.type === 'quote'
+              ? <Quote variant="lime">{item.paragraphs.map((paragraph) => <P><StratDslInline tokens={paragraph} /></P>)}</Quote>
+            : item.type === 'paragraph-image'
+              ? <P><StratDslInline tokens={item.content} /><StratDslImage {...item.image} embedded /></P>
+            : item.type === 'media'
+              ? <StratDslMedia {...item} />
+            : item.type === 'conditions'
+              ? <P>
+                  <StratDslInline tokens={item.lead} />
+                  <Separator orientation="vertical" class="mx-1 h-14 w-0.5 bg-teal-500" />
+                  <ul class="list-none space-y-4">{item.branches.map((branch) => <li class="paragraph"><StratDslInline tokens={branch} /></li>)}</ul>
+                </P>
+            : <P><StratDslInline tokens={item.content} /></P>)}
+        </div>
+      </Section>
+    )
+  })
+}

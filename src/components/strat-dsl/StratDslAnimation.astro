@@ -1,0 +1,52 @@
+---
+import type { StratDslNode } from '@/lib/strat-dsl'
+import ContentSection from '@/components/section/ContentSection.astro'
+import StratDslImage from '@/components/strat-dsl/StratDslImage.astro'
+
+type AnimationNode = Extract<StratDslNode, { type: 'animation' }>
+interface Props { node: AnimationNode }
+const { node } = Astro.props
+---
+
+<ContentSection>
+  <div class="flex flex-col gap-3" data-dsl-animation data-interval={node.interval} data-autoplay={String(node.autoplay)}>
+    <div class="relative">
+      {node.frames.map((frame, index) => (
+        <div data-animation-frame={index} class:list={[index !== 0 && 'hidden']}>
+          <StratDslImage {...frame} width={node.width ?? frame.width} embedded />
+        </div>
+      ))}
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" data-animation-prev class="rounded border px-3 py-1 hover:bg-muted">上一步</button>
+      <button type="button" data-animation-play class="rounded border px-3 py-1 hover:bg-muted">播放</button>
+      <button type="button" data-animation-next class="rounded border px-3 py-1 hover:bg-muted">下一步</button>
+      <button type="button" data-animation-reset class="rounded border px-3 py-1 hover:bg-muted">重置</button>
+      <span data-animation-progress class="text-sm opacity-70">1 / {node.frames.length}</span>
+    </div>
+  </div>
+</ContentSection>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-dsl-animation]').forEach((root) => {
+    const frames = [...root.querySelectorAll<HTMLElement>('[data-animation-frame]')]
+    const play = root.querySelector<HTMLElement>('[data-animation-play]')!
+    const progress = root.querySelector<HTMLElement>('[data-animation-progress]')!
+    const interval = Number(root.dataset.interval || 1000)
+    let index = 0
+    let timer: number | undefined
+    const show = (next: number) => {
+      index = (next + frames.length) % frames.length
+      frames.forEach((frame, frameIndex) => frame.classList.toggle('hidden', frameIndex !== index))
+      progress.textContent = `${index + 1} / ${frames.length}`
+      window.dispatchEvent(new Event('resize'))
+    }
+    const stop = () => { if (timer) window.clearInterval(timer); timer = undefined; play.textContent = '播放' }
+    const start = () => { timer = window.setInterval(() => show(index + 1), interval); play.textContent = '暂停' }
+    play.addEventListener('click', () => timer ? stop() : start())
+    root.querySelector('[data-animation-prev]')?.addEventListener('click', () => { stop(); show(index - 1) })
+    root.querySelector('[data-animation-next]')?.addEventListener('click', () => { stop(); show(index + 1) })
+    root.querySelector('[data-animation-reset]')?.addEventListener('click', () => { stop(); show(0) })
+    if (root.dataset.autoplay === 'true') start()
+  })
+</script>

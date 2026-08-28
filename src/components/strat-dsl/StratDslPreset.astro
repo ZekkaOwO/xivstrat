@@ -1,0 +1,54 @@
+---
+import BlueShockwave from '@/pages/07/necron/_mechanics/BlueShockwave.astro'
+import ColdGrip from '@/pages/07/necron/_mechanics/ColdGrip.astro'
+import FearOfDeath from '@/pages/07/necron/_mechanics/FearOfDeath.astro'
+import GrandCross from '@/pages/07/necron/_mechanics/GrandCross.astro'
+import MementoMori from '@/pages/07/necron/_mechanics/MementoMori.astro'
+import SoulReaping from '@/pages/07/necron/_mechanics/SoulReaping.astro'
+import TheEndsEmbrace from '@/pages/07/necron/_mechanics/TheEndsEmbrace.astro'
+import XfoldBlight from '@/pages/07/necron/_mechanics/XfoldBlight.astro'
+import SoulReapingCast from '@/pages/07/necron/_components/SoulReapingCast.astro'
+import FearOfDeathCast from '@/pages/07/necron/_components/FearOfDeathCast.astro'
+import BlueShockwaveCast from '@/pages/07/necron/_components/BlueShockwaveCast.astro'
+import XfoldBlightCast from '@/pages/07/necron/_components/XfoldBlightCast.astro'
+import ChokingGraspEvent from '@/pages/07/necron/_components/ChokingGraspEvent.astro'
+import DraftWarning from '@/components/draft-warning/DraftWarning.astro'
+import NoteSection from '@/components/section/NoteSection.astro'
+import SeparatorSection from '@/components/section/SeparatorSection.astro'
+import Span from '@/components/Span.vue'
+import P from '@/components/typography/P.astro'
+
+interface Props { name: string; start: string; line: number }
+const { name, start, line } = Astro.props
+const supported = [
+  'p1-intro', 'separator',
+  'blue-shockwave', 'fear-of-death', 'cold-grip', 'memento-mori', 'soul-reaping', 'xfold-blight', 'the-ends-embrace', 'grand-cross',
+  'soul-reaping-cast', 'fear-of-death-cast', 'blue-shockwave-cast', 'xfold-blight-cast', 'choking-grasp-event', 'opposite-note',
+]
+if (!supported.includes(name)) throw new Error(`攻略 DSL 第 ${line} 行：未知预设“${name}”；可用预设：${supported.join('、')}`)
+---
+
+{name === 'p1-intro' && (
+  <DraftWarning showDialog={false}>
+    <div class="my-4 flex flex-col gap-4 text-3xl text-cyan-600 [text-shadow:_0_0_1px_var(--color-cyan-600)] dark:text-cyan-400">
+      <P class="justify-center"><Span variant="lime">所有机制和解法已按时间顺序整理完毕</Span></P>
+      <P class="justify-center">开荒早期不保证100%正确性，<Span variant="red">请谨慎参考本页内容！</Span></P>
+      <P class="justify-center">TODO：详细时间轴、补充站位示意图</P>
+    </div>
+  </DraftWarning>
+)}
+{name === 'separator' && <SeparatorSection />}
+{name === 'blue-shockwave' && <BlueShockwave start={start} />}
+{name === 'fear-of-death' && <FearOfDeath start={start} />}
+{name === 'cold-grip' && <ColdGrip start={start} />}
+{name === 'memento-mori' && <MementoMori start={start} />}
+{name === 'soul-reaping' && <SoulReaping start={start} />}
+{name === 'xfold-blight' && <XfoldBlight start={start} />}
+{name === 'the-ends-embrace' && <TheEndsEmbrace start={start} />}
+{name === 'grand-cross' && <GrandCross start={start} />}
+{name === 'soul-reaping-cast' && <SoulReapingCast start={start} />}
+{name === 'fear-of-death-cast' && <FearOfDeathCast start={start} />}
+{name === 'blue-shockwave-cast' && <BlueShockwaveCast start={start} />}
+{name === 'xfold-blight-cast' && <XfoldBlightCast start={start} />}
+{name === 'choking-grasp-event' && <ChokingGraspEvent start={start} />}
+{name === 'opposite-note' && <NoteSection>此次必定与上次相反。</NoteSection>}

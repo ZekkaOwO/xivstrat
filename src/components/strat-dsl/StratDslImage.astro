@@ -1,0 +1,25 @@
+---
+import type { ImageMetadata } from 'astro'
+
+import ContentSection from '@/components/section/ContentSection.astro'
+import ImgRow from '@/components/typography/ImgRow.astro'
+
+interface ImageInput { path: string; title?: string; alt: string; line: number }
+interface Props { path?: string; title?: string; alt?: string; width?: string; line: number; embedded?: boolean; images?: ImageInput[] }
+const { path, title, alt = '', width, line, embedded = false, images } = Astro.props
+const modules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/**/*.{png,jpg,jpeg,webp,gif}', { eager: true })
+const inputs: ImageInput[] = images ?? [{ path: path ?? '', title, alt, line }]
+const imgs = inputs.map((input) => {
+  const key = Object.keys(modules).find((candidate) => candidate.endsWith(`/src/assets/${input.path.replace(/^\/+/, '')}`))
+  if (!key) throw new Error(`攻略 DSL 第 ${input.line} 行：找不到图片“${input.path}”`)
+  return { src: modules[key].default, title: input.title, alt: input.alt }
+})
+const widthClasses: Record<string, string> = { '80': 'max-w-80', '90': 'max-w-90', '100': 'max-w-100', '104': 'max-w-104', '112': 'max-w-112.5', '112.5': 'max-w-112.5', '120': 'max-w-120', '140': 'max-w-140', '160': 'max-w-160', '187': 'max-w-187.5', '187.5': 'max-w-187.5', '200': 'max-w-200' }
+const widthClass = widthClasses[width ?? '160'] ?? 'max-w-160'
+---
+
+{
+  embedded
+    ? <ImgRow borderVariant="cyan" wrapperClass={widthClass} imgs={imgs} />
+    : <ContentSection><ImgRow borderVariant="cyan" wrapperClass={widthClass} imgs={imgs} /></ContentSection>
+}

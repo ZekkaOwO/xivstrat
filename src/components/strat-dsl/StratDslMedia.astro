@@ -1,0 +1,25 @@
+---
+import type { ImageMetadata } from 'astro'
+import { Image } from 'astro:assets'
+import { borderColorMap } from '@/components/typography/img'
+import P from '@/components/typography/P.astro'
+import StratDslInline from '@/components/strat-dsl/StratDslInline.astro'
+import type { StratDslImageNode, StratDslInline as Inline } from '@/lib/strat-dsl'
+
+interface Props { image: StratDslImageNode; paragraphs: Inline[][]; width?: string; border?: string; line: number }
+const { image, paragraphs, width = '90', border = 'amber' } = Astro.props
+const modules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/**/*.{png,jpg,jpeg,webp,gif}', { eager: true })
+const key = Object.keys(modules).find((candidate) => candidate.endsWith(`/src/assets/${image.path.replace(/^\/+/, '')}`))
+if (!key) throw new Error(`攻略 DSL 第 ${image.line} 行：找不到图片“${image.path}”`)
+const widthClasses: Record<string, string> = { '80': 'max-w-80', '90': 'max-w-90', '100': 'max-w-100', '120': 'max-w-120' }
+const borderClass = borderColorMap[border as keyof typeof borderColorMap] ?? borderColorMap.amber
+---
+
+<div class="flex gap-4">
+  <div class:list={[widthClasses[width] ?? 'max-w-90', 'shrink']}>
+    <Image src={modules[key].default} alt={image.alt} class:list={['border-2', borderClass]} />
+  </div>
+  <div class="shrink-0 grow space-y-4">
+    {paragraphs.map((paragraph) => <P><StratDslInline tokens={paragraph} /></P>)}
+  </div>
+</div>

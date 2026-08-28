@@ -1,0 +1,12 @@
+---
+import type { ImageMetadata } from 'astro'
+import Buff from '@/components/Buff.astro'
+
+interface Props { path: string; name: string; tag?: string }
+const { path, name, tag = '' } = Astro.props
+const modules = import.meta.glob<{ default: ImageMetadata }>('/src/assets/buff/**/*.{png,jpg,jpeg,webp,gif}', { eager: true })
+const key = Object.keys(modules).find((candidate) => candidate.endsWith(`/src/assets/buff/${path.replace(/^\/+/, '')}`))
+if (!key) throw new Error(`攻略 DSL：找不到状态图标“${path}”`)
+---
+
+<Buff icon={modules[key].default} name={name} nameVariant="yellow" description={name} tag={tag} hover />

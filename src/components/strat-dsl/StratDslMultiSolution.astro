@@ -1,0 +1,71 @@
+---
+import type { StratDslNode } from '@/lib/strat-dsl'
+import P from '@/components/typography/P.astro'
+import StratDslInline from '@/components/strat-dsl/StratDslInline.astro'
+import StratDslImage from '@/components/strat-dsl/StratDslImage.astro'
+
+type MultiSolutionNode = Extract<StratDslNode, { type: 'multi-solution' }>
+interface Props { node: MultiSolutionNode }
+const { node } = Astro.props
+const groupId = `dsl-solutions-${node.line}`
+---
+
+<div data-dsl-solutions={groupId} data-default={node.defaultSolution}>
+  {node.solutions.map((solution) => <div id={solution.id} class="-mb-(--article-row-gap) h-0 scroll-mt-[calc(5rem+1px)]"></div>)}
+  <section class="strat-section content-section multi-solution-section ml-64 grid grid-cols-1 px-4 text-base">
+    <div>
+      <div class="inline-flex items-center rounded-md border border-dashed bg-muted p-1 text-muted-foreground">
+        {node.solutions.map((solution) => (
+          <button
+            type="button"
+            data-solution-trigger={solution.title}
+            class="inline-flex cursor-pointer items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all"
+          >{solution.title}</button>
+        ))}
+      </div>
+      {node.solutions.map((solution) => (
+        <div data-solution-panel={solution.title} class="mt-2 hidden">
+          <div class="bg-card/95 text-card-foreground relative h-full w-full rounded-lg border border-dashed border-lime-700/25 px-4 py-6 dark:border-lime-700/50">
+            <div class="flex flex-col gap-4">
+              {solution.items.map((item) => item.type === 'image'
+                ? <StratDslImage {...item} embedded />
+                : item.type === 'image-group'
+                  ? <StratDslImage images={item.images} width={item.width} line={item.line} embedded />
+                  : item.type === 'paragraph'
+                    ? <P><StratDslInline tokens={item.content} /></P>
+                    : null)}
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+</div>
+
+<script>
+  const activateSolutions = (root: HTMLElement, title: string) => {
+    root.querySelectorAll<HTMLElement>('[data-solution-panel]').forEach((panel) => panel.classList.toggle('hidden', panel.dataset.solutionPanel !== title))
+    root.querySelectorAll<HTMLElement>('[data-solution-trigger]').forEach((trigger) => {
+      const active = trigger.dataset.solutionTrigger === title
+      trigger.classList.toggle('text-lime-700', active)
+      trigger.classList.toggle('dark:text-lime-400', active)
+      trigger.classList.toggle('bg-background', active)
+      trigger.setAttribute('aria-selected', String(active))
+    })
+    window.dispatchEvent(new Event('resize'))
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-dsl-solutions]').forEach((root) => {
+    const anchors = [...root.querySelectorAll<HTMLElement>('[id]')]
+    const triggers = [...root.querySelectorAll<HTMLElement>('[data-solution-trigger]')]
+    const hashMatch = anchors.find((anchor) => `#${anchor.id}` === location.hash)
+    const solution = hashMatch
+      ? triggers.find((trigger, index) => anchors[index] === hashMatch)?.dataset.solutionTrigger
+      : undefined
+    activateSolutions(root, solution ?? root.dataset.default ?? '')
+    triggers.forEach((trigger, index) => trigger.addEventListener('click', () => {
+      activateSolutions(root, trigger.dataset.solutionTrigger ?? '')
+      if (anchors[index]) history.replaceState(null, '', `#${anchors[index].id}`)
+    }))
+  })
+</script>

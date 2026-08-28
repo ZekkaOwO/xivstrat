@@ -1,0 +1,38 @@
+---
+import type { StratDslInline } from '@/lib/strat-dsl'
+
+import Boss from '@/components/Boss.astro'
+import RoleIcon from '@/components/RoleIcon.astro'
+import Span from '@/components/Span.vue'
+import Skill from '@/components/typography/Skill.astro'
+import MagicVulnerabilityUp from '@/components/buff/MagicVulnerabilityUp.astro'
+import PhysicalVulnerabilityUp from '@/components/buff/PhysicalVulnerabilityUp.astro'
+import Bleeding from '@/components/buff/Bleeding.astro'
+import DamageInfo from '@/components/DamageInfo.astro'
+import DotInfo from '@/components/DotInfo.astro'
+import StratLink from '@/components/StratLink.astro'
+import StratDslStatus from '@/components/strat-dsl/StratDslStatus.astro'
+
+interface Props { tokens: StratDslInline[] }
+const { tokens } = Astro.props
+---
+
+{
+  tokens.map((token) => {
+    if (token.type === 'text') return token.value
+    if (token.type === 'highlight') return <Span variant="yellow">{token.value}</Span>
+    if (token.type === 'color') return <Span variant={token.color}>{token.value}</Span>
+    if (token.type === 'link') return <StratLink variant="yellow" href={token.href}>{token.value}</StratLink>
+    if (token.type === 'status') return <StratDslStatus {...token} />
+    if (token.type === 'boss') return <Boss />
+    if (token.type === 'skill') return <Skill name={token.value} />
+    if (token.type === 'damage') return <DamageInfo damage={token.damage} type={token.damageType} />
+    if (token.type === 'dot') return <DotInfo damage={token.damage} />
+    if (token.type === 'buff') return token.buff === 'magical-vulnerability'
+      ? <MagicVulnerabilityUp tag={token.tag} hover />
+      : token.buff === 'physical-vulnerability'
+        ? <PhysicalVulnerabilityUp tag={token.tag} hover />
+        : <Bleeding tag={token.tag} hover />
+    return <RoleIcon role={token.role} tag={token.tag} />
+  })
+}

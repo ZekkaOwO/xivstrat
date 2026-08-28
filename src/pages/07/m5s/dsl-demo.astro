@@ -1,0 +1,12 @@
+---
+import DutyStratLayout from '@/layouts/DutyStratLayout.astro'
+import StratDsl from '@/components/strat-dsl/StratDsl.astro'
+import { parseStratDsl } from '@/lib/strat-dsl'
+import source from '@/content/strat-dsl/m5s-demo.strat?raw'
+
+const document = parseStratDsl(source)
+---
+
+<DutyStratLayout dutyId={document.duty} base={document.base}>
+  <StratDsl document={document} />
+</DutyStratLayout>
